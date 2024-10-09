@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多文件按行数分解并导出ZIP文件</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #output {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>多文件按行数分解并导出ZIP文件</h1>
+    
+    <input type="file" id="fileInput" multiple accept=".txt"><br><br>
+    
+    <label for="linesPerFile">每个文件包含多少行:</label>
+    <input type="number" id="linesPerFile" value="100"><br><br>
+
+    <label for="filePrefix">导出文件名前缀:</label>
+    <input type="text" id="filePrefix" value="myfile_part_"><br><br>
+    
+    <button onclick="handleFilesUpload()">开始处理</button>
+
+    <div id="output"></div>
+
+    <script>
+        async function handleFilesUpload() {
+            const fileInput = document.getElementById('fileInput');
+            const files = fileInput.files;
+            const linesPerFile = parseInt(document.getElementById('linesPerFile').value);
+            const filePrefix = document.getElementById('filePrefix').value || "file_part_";
+
+            if (files.length === 0) {
+                alert('请上传至少一个文本文件');
+                return;
+            }
+
+            if (isNaN(linesPerFile) || linesPerFile <= 0) {
+                alert('请输入有效的行数！');
+                return;
+            }
+
+            const zip = new JSZip();  // 创建ZIP对象
+            let globalFileCounter = 1;  // 记录所有文件的全局编号
+
+            const filePromises = Array.from(files).map(file => {
+                return new Promise(resolve => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const data = e.target.result;
+                        const prefix = filePrefix || file.name.split('.').slice(0, -1).join('.');
+                        splitAndAddToZip(data, linesPerFile, prefix, zip, globalFileCounter);
+                        globalFileCounter += Math.ceil(data.split('\n').length / linesPerFile); // 更新全局编号
+                        resolve();
+                    };
+                    reader.readAsText(file);
+                });
+            });
+
+            await Promise.all(filePromises);  // 等待所有文件处理完毕
+
+            zip.generateAsync({ type: 'blob' }).then(function(content) {
+                const url = window.URL.createObjectURL(content);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'processed_files.zip';  // ZIP文件名
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            });
+        }
+
+        function splitAndAddToZip(data, linesPerFile, prefix, zip, globalCounter) {
+            const lines = data.split('\n');
+            const totalFiles = Math.ceil(lines.length / linesPerFile);
+
+            for (let i = 0; i < totalFiles; i++) {
+                const chunk = lines.slice(i * linesPerFile, (i + 1) * linesPerFile).join('\n');
+                const chunkFileName = `${prefix}${globalCounter}.txt`;
+                zip.file(chunkFileName, chunk);
+                globalCounter++;  // 文件编号递增
+            }
+        }
+    </script>
+
+</body>
+</html>
