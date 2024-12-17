@@ -1,1 +1,90 @@
 
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>手机号码处理</title>
+  </head>
+  <body>
+    <h1>手机号码处理工具</h1>
+    <code>
+        手机号|姓名
+        手机号
+        ->>>
+        手机号|姓名
+    </code>
+    <p>选择源txt文件（格式为：手机号|姓名，每行一个）:</p>
+    <input type="file" id="sourceFile" accept=".txt" />
+    <br />
+    <p>选择筛号后的txt（每行一个号码）:</p>
+    <input type="file" id="usPhoneFile" accept=".txt" />
+    <div>
+      <button id="processButton">处理并下载结果</button>
+    </div>
+
+    <script>
+      document
+        .getElementById("processButton")
+        .addEventListener("click", async () => {
+          const usPhoneFile = document.getElementById("usPhoneFile").files[0];
+          const sourceFile = document.getElementById("sourceFile").files[0];
+
+          if (!usPhoneFile || !sourceFile) {
+            alert("请同时选择手机号码文件和源数据文件。");
+            return;
+          }
+
+          const usPhoneText = await readFile(usPhoneFile);
+          const sourceText = await readFile(sourceFile);
+
+          const usPhone = usPhoneText
+            .split("\n")
+            .map((line) => line.trim())
+            .filter(Boolean);
+          const sourceData = sourceText
+            .split("\n")
+            .map((line) => line.trim())
+            .filter(Boolean);
+          const SourceObj = {};
+
+          sourceData.forEach((line) => {
+            const [phone, name] = line.split("|");
+            if (name) {
+              const firstName = name.split(" ")[0];
+              SourceObj[+phone] =
+                firstName.charAt(0).toUpperCase() + firstName.slice(1);
+            }
+          });
+
+          const result = usPhone
+            .map((line) => {
+              const phone = +line;
+              const name = SourceObj[phone];
+              return `${phone}|${name || ""}`;
+            })
+            .join("\n");
+
+          downloadFile("result.txt", result);
+        });
+
+      function readFile(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (event) => resolve(event.target.result);
+          reader.onerror = (error) => reject(error);
+          reader.readAsText(file);
+        });
+      }
+
+      function downloadFile(filename, content) {
+        const blob = new Blob([content], { type: "text/plain" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        link.click();
+        URL.revokeObjectURL(link.href);
+      }
+    </script>
+  </body>
+</html>
