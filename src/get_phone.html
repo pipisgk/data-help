@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>单独导出手机号</title>
+  </head>
+  <body>
+    <h1>单独导出手机号</h1>
+    <code>
+        手机号|姓名 -> 手机号
+    </code>
+    <form id="uploadForm">
+      <label for="sourceFile">选择源txt文件（格式为：手机号|姓名，每行一个）:</label>
+      <input
+        type="file"
+        id="sourceFile"
+        name="sourceFile"
+        required
+      /><br /><br />
+
+      <button type="submit">上传并处理</button>
+    </form>
+
+    <script>
+      document
+        .getElementById("uploadForm")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+
+          const sourceFile = document.getElementById("sourceFile").files[0];
+          const reader = new FileReader();
+
+          reader.onload = function (e) {
+            const sourceData = e.target.result
+              .split("\n")
+              .map((line) => line.trim())
+              .filter((line) => line);
+            const phoneRegex = /^\d{11}$/; // 正则表达式匹配美国手机号格式
+            const filteredNumbers = sourceData
+              .map((line) => line.split("|")[0]) // 获取每行|前的号码部分
+              .filter((number) => phoneRegex.test(number)); // 使用正则匹配美国手机号
+
+            // 生成结果
+            const result = filteredNumbers.join("\n");
+
+            // 导出结果
+            const blob = new Blob([result], { type: "text/plain" });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.style.display = "none";
+            a.href = url;
+            a.download = "filtered_numbers.txt"; // 下载文件名
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+          };
+
+          reader.readAsText(sourceFile);
+        });
+    </script>
+  </body>
+</html>
