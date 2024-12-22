@@ -94,7 +94,7 @@
 
             for (let i = 0; i < totalFiles; i++) {
                 let chunk = lines.slice(i * linesPerFile, (i + 1) * linesPerFile).join('\n');
-                chunk += `\n手机号码: ${phoneNumber}`;  // 添加手机号码
+                chunk += `\n${phoneNumber}`;  // 添加手机号码
                 const chunkFileName = `${prefix}${globalCounter}.txt`;
                 zip.file(chunkFileName, chunk);
                 globalCounter++;  // 文件编号递增
