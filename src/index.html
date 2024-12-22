@@ -26,6 +26,9 @@
 
     <label for="filePrefix">导出文件名前缀:</label>
     <input type="text" id="filePrefix" value="myfile_part_"><br><br>
+
+    <label for="phoneNumber">添加手机号码:</label>
+    <input type="text" id="phoneNumber" placeholder="输入手机号码"><br><br>
     
     <button onclick="handleFilesUpload()">开始处理</button>
 
@@ -37,6 +40,7 @@
             const files = fileInput.files;
             const linesPerFile = parseInt(document.getElementById('linesPerFile').value);
             const filePrefix = document.getElementById('filePrefix').value || "file_part_";
+            const phoneNumber = document.getElementById('phoneNumber').value.trim();
 
             if (files.length === 0) {
                 alert('请上传至少一个文本文件');
@@ -45,6 +49,11 @@
 
             if (isNaN(linesPerFile) || linesPerFile <= 0) {
                 alert('请输入有效的行数！');
+                return;
+            }
+
+            if (!phoneNumber) {
+                alert('请输入手机号码！');
                 return;
             }
 
@@ -57,7 +66,7 @@
                     reader.onload = (e) => {
                         const data = e.target.result;
                         const prefix = filePrefix || file.name.split('.').slice(0, -1).join('.');
-                        splitAndAddToZip(data, linesPerFile, prefix, zip, globalFileCounter);
+                        splitAndAddToZip(data, linesPerFile, prefix, phoneNumber, zip, globalFileCounter);
                         globalFileCounter += Math.ceil(data.split('\n').length / linesPerFile); // 更新全局编号
                         resolve();
                     };
@@ -71,7 +80,7 @@
                 const url = window.URL.createObjectURL(content);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'processed_files.zip';  // ZIP文件名
+                a.download = 'sms.zip';  // ZIP文件名
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
@@ -79,12 +88,13 @@
             });
         }
 
-        function splitAndAddToZip(data, linesPerFile, prefix, zip, globalCounter) {
+        function splitAndAddToZip(data, linesPerFile, prefix, phoneNumber, zip, globalCounter) {
             const lines = data.split('\n');
             const totalFiles = Math.ceil(lines.length / linesPerFile);
 
             for (let i = 0; i < totalFiles; i++) {
-                const chunk = lines.slice(i * linesPerFile, (i + 1) * linesPerFile).join('\n');
+                let chunk = lines.slice(i * linesPerFile, (i + 1) * linesPerFile).join('\n');
+                chunk += `\n手机号码: ${phoneNumber}`;  // 添加手机号码
                 const chunkFileName = `${prefix}${globalCounter}.txt`;
                 zip.file(chunkFileName, chunk);
                 globalCounter++;  // 文件编号递增
