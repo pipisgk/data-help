@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validate US Phone Numbers</title>
+</head>
+<body>
+    <h1>验证TXT文件中的美国电话号码</h1>
+    <input type="file" id="fileInput" accept=".txt">
+    <button id="processFile">处理文件</button>
+    <a id="downloadLink" style="display: none;">下载处理后的文件</a>
+
+    <script>
+        document.getElementById('processFile').addEventListener('click', () => {
+            const fileInput = document.getElementById('fileInput');
+            if (!fileInput.files.length) {
+                alert('请先选择一个.txt文件。');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(event) {
+                const content = event.target.result;
+                const lines = content.split('\n');
+
+                // 验证每一行是否为有效的美国电话号码
+                const validPhoneNumbers = lines.filter(line => {
+                    const trimmedLine = line.trim();
+                    return /^[1][0-9]{10}$/.test(trimmedLine);
+                });
+
+                const invalidCount = lines.length - validPhoneNumbers.length;
+
+                // 显示有效和无效数据的数量
+                alert(`有效号码: ${validPhoneNumbers.length} 条\n无效号码: ${invalidCount} 条`);
+
+                // 创建一个新的Blob用于处理后的内容
+                const shuffledPhoneNumbers = validPhoneNumbers.sort(() => Math.random() - 0.5);
+                const processedContent = shuffledPhoneNumbers.join('\n');
+                const blob = new Blob([processedContent], { type: 'text/plain' });
+
+                // 创建处理文件的下载链接
+                const downloadLink = document.getElementById('downloadLink');
+                downloadLink.href = URL.createObjectURL(blob);
+                downloadLink.download = 'processed_numbers.txt';
+                downloadLink.style.display = 'block';
+                downloadLink.textContent = '下载处理后的文件';
+            };
+
+            reader.readAsText(file);
+        });
+    </script>
+</body>
+</html>
