@@ -27,7 +27,7 @@
     <label for="filePrefix">导出文件名前缀:</label>
     <input type="text" id="filePrefix" value="myfile_part_"><br><br>
 
-    <label for="phoneNumber">添加手机号码:</label>
+    <label for="phoneNumber">添加手机号码 (可选):</label>
     <input type="text" id="phoneNumber" placeholder="输入手机号码"><br><br>
     
     <button onclick="handleFilesUpload()">开始处理</button>
@@ -49,11 +49,6 @@
 
             if (isNaN(linesPerFile) || linesPerFile <= 0) {
                 alert('请输入有效的行数！');
-                return;
-            }
-
-            if (!phoneNumber) {
-                alert('请输入手机号码！');
                 return;
             }
 
@@ -94,7 +89,9 @@
 
             for (let i = 0; i < totalFiles; i++) {
                 let chunk = lines.slice(i * linesPerFile, (i + 1) * linesPerFile).join('\n');
-                chunk += `\n${phoneNumber}`;  // 添加手机号码
+                if (phoneNumber) {
+                    chunk += `\n${phoneNumber}`;  // 添加手机号码
+                }
                 const chunkFileName = `${prefix}${globalCounter}.txt`;
                 zip.file(chunkFileName, chunk);
                 globalCounter++;  // 文件编号递增
