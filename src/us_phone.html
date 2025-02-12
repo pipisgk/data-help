@@ -8,12 +8,16 @@
 <body>
     <h1>验证TXT文件中的美国电话号码</h1>
     <input type="file" id="fileInput" accept=".txt">
+    <label>
+        <input type="checkbox" id="addPrefix"> 添加前缀1
+    </label>
     <button id="processFile">处理文件</button>
     <a id="downloadLink" style="display: none;">下载处理后的文件</a>
 
     <script>
         document.getElementById('processFile').addEventListener('click', () => {
             const fileInput = document.getElementById('fileInput');
+            const addPrefix = document.getElementById('addPrefix').checked;
             if (!fileInput.files.length) {
                 alert('请先选择一个.txt文件。');
                 return;
@@ -26,10 +30,18 @@
                 const content = event.target.result;
                 const lines = content.split('\n');
 
-                // 验证每一行是否为有效的美国电话号码
-                const validPhoneNumbers = lines.filter(line => {
+                // 处理每一行，添加前缀1（如果需要）
+                const processedLines = lines.map(line => {
                     const trimmedLine = line.trim();
-                    return /^[1][0-9]{10}$/.test(trimmedLine);
+                    if (addPrefix && !trimmedLine.startsWith('1') && /^[0-9]{10}$/.test(trimmedLine)) {
+                        return '1' + trimmedLine;
+                    }
+                    return trimmedLine;
+                });
+
+                // 验证每一行是否为有效的美国电话号码
+                const validPhoneNumbers = processedLines.filter(line => {
+                    return /^[1][0-9]{10}$/.test(line);
                 });
 
                 const invalidCount = lines.length - validPhoneNumbers.length;
