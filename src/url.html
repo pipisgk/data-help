@@ -77,7 +77,7 @@
             }
         };
 
-        let result = [];
+        let urlNotes = JSON.parse(localStorage.getItem('urlNotes')) || [];
 
         document.getElementById('generateButton').addEventListener('click', function() {
             // 获取输入框的值
@@ -90,31 +90,47 @@
 
             // 处理拼接逻辑
             const urls = urlInput.split(',').map(url => url.trim()).filter(url => url); // 根据逗号分隔，去掉多余空格和空值
-            result = urls.map(url => `https://${url}/${suffixInput}`);
+            urlNotes = urls.map((url, index) => ({
+                url: `https://${url}/${suffixInput}`,
+                note: ''
+            }));
 
             // 输出结果
             const resultContainer = document.getElementById('result');
             resultContainer.innerHTML = ''; // 清空之前的结果
-            result.forEach(line => {
+            urlNotes.forEach((item, index) => {
                 const p = document.createElement('p');
-                p.textContent = line;
+                p.textContent = item.url;
                 const copyButton = document.createElement('button');
                 copyButton.textContent = '复制';
                 copyButton.style.marginLeft = '10px';
                 copyButton.addEventListener('click', () => {
-                    navigator.clipboard.writeText(line).then(() => {
+                    navigator.clipboard.writeText(item.url).then(() => {
                         showCopyTip();
                     }).catch(err => {
                         console.error('复制失败:', err);
                     });
                 });
+                const noteInput = document.createElement('input');
+                noteInput.type = 'text';
+                noteInput.placeholder = '备注';
+                noteInput.style.marginLeft = '10px';
+                noteInput.value = item.note;
+                noteInput.addEventListener('input', () => {
+                    urlNotes[index].note = noteInput.value;
+                    localStorage.setItem('urlNotes', JSON.stringify(urlNotes));
+                });
                 p.appendChild(copyButton);
+                p.appendChild(noteInput);
                 resultContainer.appendChild(p);
             });
+
+            // 存储拼接结果和备注到 localStorage
+            localStorage.setItem('urlNotes', JSON.stringify(urlNotes));
         });
 
         document.getElementById('copyAllButton').addEventListener('click', function() {
-            const allUrls = result.join('\n');
+            const allUrls = urlNotes.map(item => item.url).join('\n');
             navigator.clipboard.writeText(allUrls).then(() => {
                 showCopyTip();
             }).catch(err => {
@@ -129,6 +145,36 @@
                 copyTip.style.display = 'none';
             }, 3000);
         }
+
+        // 页面加载时从 localStorage 读取存储的拼接结果和备注，并将其显示在页面上
+        const resultContainer = document.getElementById('result');
+        resultContainer.innerHTML = ''; // 清空之前的结果
+        urlNotes.forEach((item, index) => {
+            const p = document.createElement('p');
+            p.textContent = item.url;
+            const copyButton = document.createElement('button');
+            copyButton.textContent = '复制';
+            copyButton.style.marginLeft = '10px';
+            copyButton.addEventListener('click', () => {
+                navigator.clipboard.writeText(item.url).then(() => {
+                    showCopyTip();
+                }).catch(err => {
+                    console.error('复制失败:', err);
+                });
+            });
+            const noteInput = document.createElement('input');
+            noteInput.type = 'text';
+            noteInput.placeholder = '备注';
+            noteInput.style.marginLeft = '10px';
+            noteInput.value = item.note;
+            noteInput.addEventListener('input', () => {
+                urlNotes[index].note = noteInput.value;
+                localStorage.setItem('urlNotes', JSON.stringify(urlNotes));
+            });
+            p.appendChild(copyButton);
+            p.appendChild(noteInput);
+            resultContainer.appendChild(p);
+        });
     </script>
 </body>
 </html>
