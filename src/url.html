@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL 拼接工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        textarea, input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .output {
+            margin-top: 20px;
+        }
+        .output p {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>URL 拼接工具</h1>
+        <label for="urlInput">请输入 URL（用逗号分隔）:</label>
+        <textarea id="urlInput" rows="3" placeholder="ddd.com,abc.com"></textarea>
+        
+        <label for="suffixInput">请输入后缀:</label>
+        <input type="text" id="suffixInput" placeholder="例如：api">
+
+        <button id="generateButton">生成</button>
+        <button id="copyAllButton">复制全部</button>
+        <div id="copyTip" style="position: fixed; bottom: 20px; right: 20px; background-color: #28a745; color: white; padding: 10px; border-radius: 4px; display: none;">已复制到剪贴板</div>
+
+        <div class="output">
+            <h2>拼接结果:</h2>
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载时从 localStorage 读取值并设置到输入框
+        window.onload = function() {
+            const storedUrls = localStorage.getItem('urls');
+            const storedSuffix = localStorage.getItem('suffix');
+
+            if (storedUrls) {
+                document.getElementById('urlInput').value = storedUrls;
+            }
+            if (storedSuffix) {
+                document.getElementById('suffixInput').value = storedSuffix;
+            }
+        };
+
+        let result = [];
+
+        document.getElementById('generateButton').addEventListener('click', function() {
+            // 获取输入框的值
+            const urlInput = document.getElementById('urlInput').value;
+            const suffixInput = document.getElementById('suffixInput').value;
+
+            // 存储到 localStorage
+            localStorage.setItem('urls', urlInput);
+            localStorage.setItem('suffix', suffixInput);
+
+            // 处理拼接逻辑
+            const urls = urlInput.split(',').map(url => url.trim()).filter(url => url); // 根据逗号分隔，去掉多余空格和空值
+            result = urls.map(url => `https://${url}/${suffixInput}`);
+
+            // 输出结果
+            const resultContainer = document.getElementById('result');
+            resultContainer.innerHTML = ''; // 清空之前的结果
+            result.forEach(line => {
+                const p = document.createElement('p');
+                p.textContent = line;
+                const copyButton = document.createElement('button');
+                copyButton.textContent = '复制';
+                copyButton.style.marginLeft = '10px';
+                copyButton.addEventListener('click', () => {
+                    navigator.clipboard.writeText(line).then(() => {
+                        showCopyTip();
+                    }).catch(err => {
+                        console.error('复制失败:', err);
+                    });
+                });
+                p.appendChild(copyButton);
+                resultContainer.appendChild(p);
+            });
+        });
+
+        document.getElementById('copyAllButton').addEventListener('click', function() {
+            const allUrls = result.join('\n');
+            navigator.clipboard.writeText(allUrls).then(() => {
+                showCopyTip();
+            }).catch(err => {
+                console.error('复制失败:', err);
+            });
+        });
+
+        function showCopyTip() {
+            const copyTip = document.getElementById('copyTip');
+            copyTip.style.display = 'block';
+            setTimeout(() => {
+                copyTip.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
